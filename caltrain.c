@@ -32,14 +32,6 @@ void station_init(struct station *station)
 	printf("init ->"); print_station(station);
 }
 
-
-/* This function is invoked when a train arrives at a station and
- * opens its doors. count indicates how many seats are available on 
- * the train. The function must not return until the train is 
- * satisfactorily loaded (all passengers are in their seats, and 
- * either the train is full or all waiting passengers have boarded).
- *
- */
 void station_load_train(struct station *station, int count)
 {
 	lock_acquire(station->lck);
@@ -50,31 +42,16 @@ void station_load_train(struct station *station, int count)
 		cond_broadcast(station->cond_train_arrived,station->lck);
 		cond_wait(station->cond_all_passengers_seated,station->lck);
 	}
-
-	//all passengers boarded 
-	//printf("train left ->"); print_station(station);
-
-	//reset for next train
 	station->train_empty_seats = 0;
 	lock_release(station->lck);
 }
 
-
-/* 
- * This function is invoked when a passenger robot arrives in a station. 
- * This function must not return until a train is in the station 
- * (i.e., a call to station_load_train is in progress) and there are 
- * enough free seats on the train for this passenger to sit down. 
- * Once this function returns, the passenger robot will move the 
- * passenger on board the train and into a seat (you do not need to 
- * worry about how this mechanism works). 
- */
  void station_wait_for_train(struct station *station)
 {
 	lock_acquire(station->lck);
 	station->station_waiting_passengers++;
 	printf("passenger arrived ->"); print_station(station);
-	while (station->train_standing_passengers == station->train_empty_seats) //wait for train with empty seats space
+	while (station->train_standing_passengers == station->train_empty_seats) 
 		cond_wait(station->cond_train_arrived,station->lck);
 	station->train_standing_passengers++;
 	station->station_waiting_passengers--;
@@ -82,11 +59,6 @@ void station_load_train(struct station *station, int count)
 	lock_release(station->lck);
 
 }
-
-
-/* This function is called once the passenger is seated to let the 
- * train know that it's on board.
- */
 void station_on_board(struct station *station)
 {
 	lock_acquire(station->lck);
